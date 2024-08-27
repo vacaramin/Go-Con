@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+// Write a program in which one go routine writes sth to one channel
+// Another go routine consumes it
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	sharedVariable := make(chan int, 1)
@@ -20,6 +22,15 @@ func main() {
 			wg.Done()
 		}(i)
 	}
+	wg.Wait()
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	wg.Add(2)
+	go WriteToChannel(sharedVariable, &wg)
+	go ReadFromChannel(sharedVariable, &wg)
+
 	wg.Wait()
 }
 
@@ -37,4 +48,16 @@ func setRandom(i int, mut *sync.Mutex, sharedChannel chan int) {
 	// Receive from the channel outside the mutex lock
 	receivedNum := <-sharedChannel
 	fmt.Printf("Received by Thread #%d: %v\n", i, receivedNum)
+}
+
+func WriteToChannel(ch chan<- int, wg *sync.WaitGroup) {
+	time.Sleep(time.Second * 5)
+	ch <- 1
+	defer wg.Done()
+}
+
+func ReadFromChannel(ch <-chan int, wg *sync.WaitGroup) {
+	channeldata := <-ch
+	fmt.Println("Read from channel = ", channeldata)
+	defer wg.Done()
 }
